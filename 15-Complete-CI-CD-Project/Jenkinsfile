@@ -1,0 +1,242 @@
+pipeline {
+
+    agent any
+
+
+    environment {
+
+        APP_NAME = "my-application"
+        DOCKER_IMAGE = "username/my-application"
+        DOCKER_TAG = "v1"
+
+        DOCKER_CREDENTIALS = "dockerhub-credentials"
+        SSH_CREDENTIALS = "server-ssh-key"
+
+        DEPLOY_SERVER = "user@server-ip"
+
+    }
+
+
+    stages {
+
+
+        stage('Checkout Code') {
+
+            steps {
+
+                echo "Checking out source code..."
+
+                git branch: 'main',
+                url: 'https://github.com/username/project.git'
+
+            }
+
+        }
+
+
+        stage('Build Application') {
+
+            steps {
+
+                echo "Building application..."
+
+                sh 'mvn clean package'
+
+            }
+
+        }
+
+
+        stage('Run Tests') {
+
+            steps {
+
+                echo "Running automated tests..."
+
+                sh 'mvn test'
+
+            }
+
+        }
+
+
+        stage('Archive Artifact') {
+
+            steps {
+
+                echo "Archiving build artifacts..."
+
+                archiveArtifacts artifacts: '**/target/*.jar',
+                fingerprint: true
+
+            }
+
+        }
+
+
+        stage('Build Docker Image') {
+
+            steps {
+
+                echo "Building Docker image..."
+
+                sh """
+
+                docker build \
+                -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+
+                """
+
+            }
+
+        }
+
+
+        stage('Docker Login & Push') {
+
+            steps {
+
+                echo "Pushing Docker image..."
+
+                withCredentials([
+                    usernamePassword(
+                    credentialsId: "${DOCKER_CREDENTIALS}",
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+
+
+                    sh """
+
+                    echo $DOCKER_PASS | docker login \
+                    -u $DOCKER_USER \
+                    --password-stdin
+
+
+                    docker push \
+                    ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+                    """
+
+                }
+
+            }
+
+        }
+
+
+        stage('Deploy Application') {
+
+            steps {
+
+                echo "Deploying application..."
+
+                sshagent(
+                credentials: ["${SSH_CREDENTIALS}"]
+                ) {
+
+
+                    sh """
+
+                    ssh -o StrictHostKeyChecking=no \
+                    ${DEPLOY_SERVER} '
+
+                    docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+
+                    docker stop ${APP_NAME} || true
+
+
+                    docker rm ${APP_NAME} || true
+
+
+                    docker run -d \
+                    --name ${APP_NAME} \
+                    -p 8080:8080 \
+                    ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+
+                    '
+
+                    """
+
+                }
+
+            }
+
+        }
+
+
+
+        stage('Health Check') {
+
+            steps {
+
+                echo "Checking application health..."
+
+                sh """
+
+                sleep 20
+
+
+                curl -f http://${DEPLOY_SERVER}:8080 \
+                || exit 1
+
+                """
+
+            }
+
+        }
+
+
+    }
+
+
+
+    post {
+
+
+        success {
+
+            echo "Pipeline completed successfully."
+
+
+            // Example notification
+
+            // slackSend(
+            // channel: '#devops',
+            // message: "Deployment Successful"
+            // )
+
+        }
+
+
+
+        failure {
+
+            echo "Pipeline failed. Check Jenkins logs."
+
+
+            // Example notification
+
+            // slackSend(
+            // channel: '#devops',
+            // message: "Deployment Failed"
+            // )
+
+        }
+
+
+
+        always {
+
+            echo "Cleaning Jenkins workspace..."
+
+            cleanWs()
+
+        }
+
+    }
+
+}
