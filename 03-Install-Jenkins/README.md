@@ -1,394 +1,405 @@
-# Episode 03 - Install Jenkins
+# 03 — Install Jenkins
 
-## Overview
+This section covers the installation and initial configuration of Jenkins on an Ubuntu server.
 
-Jenkins is one of the most popular open-source automation servers used to implement Continuous Integration (CI) and Continuous Delivery (CD). It automates repetitive tasks such as building applications, running automated tests, and deploying software.
-
-Jenkins supports hundreds of plugins, allowing seamless integration with tools like Git, Docker, Kubernetes, Maven, SonarQube, AWS, Azure, and many others.
-
-This chapter covers the installation and initial configuration of Jenkins.
+Jenkins is one of the most widely used automation tools in CI/CD. It can automatically build applications, run tests, create Docker images, and deploy applications.
 
 ---
 
-# Learning Objectives
+## What You Will Learn
 
-After completing this chapter, you will be able to:
-
-- Understand what Jenkins is
-- Install Jenkins on Linux and Windows
-- Verify Java installation
-- Start and manage the Jenkins service
-- Unlock Jenkins using the initial administrator password
-- Install recommended plugins
-- Create the first administrator account
-- Access the Jenkins Dashboard
-
----
-
-# What is Jenkins?
-
-Jenkins is an open-source automation server written in Java.
-
-It automates the software delivery lifecycle by executing predefined jobs whenever a trigger occurs, such as:
-
-- Code push
-- Pull Request
-- Scheduled execution
-- Manual trigger
-- Webhook
-
-Instead of performing builds and deployments manually, Jenkins executes them automatically.
+- What Jenkins is
+- How to install Java
+- How to install Jenkins on Ubuntu
+- How to start and manage the Jenkins service
+- How to access the Jenkins dashboard
+- How to install Docker
+- How to allow Jenkins to use Docker
+- How to install Docker Compose
+- How to verify the complete Jenkins environment
 
 ---
 
-# Why Use Jenkins?
+# What Is Jenkins?
 
-Without Jenkins:
+Jenkins is an open-source automation server used to automate software development workflows.
 
-- Manual builds
-- Manual testing
-- Manual deployments
-- Slow software releases
-- Increased human error
+A typical Jenkins workflow looks like this:
 
-With Jenkins:
+```text
+Developer
+    │
+    ▼
+GitHub
+    │
+    ▼
+Jenkins
+    │
+    ├── Build
+    │
+    ├── Test
+    │
+    ├── Docker Build
+    │
+    └── Deploy
+```
 
-- Automated builds
-- Automated testing
-- Automated deployments
-- Faster feedback
-- Reliable releases
-- Improved collaboration
+Instead of manually performing these steps, Jenkins can execute them automatically through jobs and pipelines.
+
+---
+
+# Jenkins in CI/CD
+
+Jenkins can automate the following process:
+
+```text
+Code Push
+    │
+    ▼
+Jenkins Triggered
+    │
+    ▼
+Checkout Source Code
+    │
+    ▼
+Build Application
+    │
+    ▼
+Run Tests
+    │
+    ▼
+Build Docker Image
+    │
+    ▼
+Deploy Application
+```
+
+This allows development teams to continuously integrate and deliver software.
+
+---
+
+# Jenkins Installation Requirements
+
+Before installing Jenkins, the server requires:
+
+```text
+Ubuntu Server
+      │
+      ▼
+Java
+      │
+      ▼
+Jenkins
+      │
+      ▼
+Docker
+      │
+      ▼
+Docker Compose
+```
+
+Java is required to run Jenkins.
+
+Docker is commonly used by Jenkins pipelines to:
+
+- Build container images
+- Run containers
+- Run application services
+- Create consistent build environments
+- Deploy applications
+
+Docker Compose is useful when an application contains multiple services, such as:
+
+```text
+Application
+    │
+    ├── Flask Application
+    │
+    └── MySQL Database
+```
 
 ---
 
 # Jenkins Architecture
 
-```text
-                 Developer
-                     │
-                     ▼
-             Push Code to GitHub
-                     │
-                     ▼
-                 Jenkins Server
-                     │
-      ┌──────────────┼──────────────┐
-      ▼              ▼              ▼
-    Build          Testing       Code Analysis
-      │
-      ▼
- Package / Docker Image
-      │
-      ▼
-   Deployment
-      │
-      ▼
- Monitoring & Notifications
-```
-
----
-
-# Prerequisites
-
-Before installing Jenkins, ensure the following software is available:
-
-- Java 17 or Java 21 (LTS)
-- Git
-- Internet connection
-- Administrator or sudo privileges
-- Minimum 2 GB RAM (4 GB recommended)
-
----
-
-# Installing Jenkins on Ubuntu
-
-## Step 1 – Update Package Index
-
-```bash
-sudo apt update
-```
-
----
-
-## Step 2 – Install Java
-
-```bash
-sudo apt install openjdk-21-jdk -y
-```
-
-Verify installation:
-
-```bash
-java --version
-```
-
----
-
-## Step 3 – Add Jenkins Repository
-
-Import the Jenkins GPG key:
-
-```bash
-curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
-/usr/share/keyrings/jenkins-keyring.asc > /dev/null
-```
-
-Add the repository:
-
-```bash
-echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
-/etc/apt/sources.list.d/jenkins.list > /dev/null
-```
-
----
-
-## Step 4 – Install Jenkins
-
-```bash
-sudo apt update
-sudo apt install jenkins -y
-```
-
----
-
-## Step 5 – Start Jenkins
-
-```bash
-sudo systemctl start jenkins
-```
-
-Enable Jenkins at boot:
-
-```bash
-sudo systemctl enable jenkins
-```
-
-Verify status:
-
-```bash
-sudo systemctl status jenkins
-```
-
----
-
-# Installing Jenkins on Windows
-
-1. Install Java (JDK 17 or JDK 21).
-2. Download the Jenkins Windows installer.
-3. Run the installer with Administrator privileges.
-4. Follow the installation wizard.
-5. Jenkins will be installed as a Windows Service.
-6. Open your browser and navigate to:
+A basic Jenkins environment contains a Jenkins Controller and Jenkins Agents.
 
 ```text
-http://localhost:8080
+                 Jenkins Controller
+                       │
+                       │
+                       ▼
+                Jenkins Pipeline
+                       │
+                       ▼
+                  Jenkins Agent
+                       │
+          ┌────────────┼────────────┐
+          │            │            │
+          ▼            ▼            ▼
+        Build        Test        Deploy
 ```
+
+The Jenkins Controller manages Jenkins and schedules jobs.
+
+The Jenkins Agent performs the actual work defined in the pipeline.
 
 ---
 
-# Unlock Jenkins
+# Jenkins and Docker
 
-During the first launch, Jenkins displays an unlock screen.
+Jenkins pipelines frequently use Docker.
 
-Retrieve the administrator password.
+The execution flow looks like this:
 
-Linux:
+```text
+Jenkins Controller
+        │
+        ▼
+Jenkins Agent
+        │
+        ▼
+Jenkins User
+        │
+        ▼
+Docker CLI
+        │
+        ▼
+Docker Daemon
+        │
+        ▼
+Containers / Images
+```
+
+For Jenkins to execute Docker commands:
+
+1. Docker must be installed on the machine executing the pipeline.
+2. The Docker service must be running.
+3. The Jenkins user must have permission to access Docker.
+
+The Jenkins user can be added to the Docker group:
 
 ```bash
-sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+sudo usermod -aG docker jenkins
 ```
 
-Windows:
-
-```text
-C:\ProgramData\Jenkins\.jenkins\secrets\initialAdminPassword
-```
-
-Copy the password and paste it into the Jenkins unlock page.
-
----
-
-# Install Recommended Plugins
-
-After unlocking Jenkins:
-
-1. Choose **Install Suggested Plugins**.
-2. Jenkins downloads and installs the required plugins.
-3. Wait until installation completes.
-
-These plugins provide support for:
-
-- Git
-- Pipeline
-- Maven
-- Docker
-- Credentials
-- Blue Ocean
-- Email Notifications
-
----
-
-# Create the First Administrator
-
-Provide the following information:
-
-- Username
-- Password
-- Full Name
-- Email Address
-
-Save the configuration.
-
----
-
-# Access the Jenkins Dashboard
-
-Open:
-
-```text
-http://localhost:8080
-```
-
-You should now see the Jenkins Dashboard.
-
----
-
-# Jenkins Home Directory
-
-Linux
-
-```text
-/var/lib/jenkins
-```
-
-Windows
-
-```text
-C:\ProgramData\Jenkins
-```
-
-This directory stores:
-
-- Jobs
-- Plugins
-- Credentials
-- Build History
-- Configuration
-- Logs
-
----
-
-# Service Management
-
-Common service operations include:
-
-Start Jenkins
-
-```bash
-sudo systemctl start jenkins
-```
-
-Stop Jenkins
-
-```bash
-sudo systemctl stop jenkins
-```
-
-Restart Jenkins
+After changing the group membership, Jenkins must be restarted:
 
 ```bash
 sudo systemctl restart jenkins
 ```
 
-Check Status
+Docker access can then be tested with:
 
 ```bash
-sudo systemctl status jenkins
+sudo -u jenkins docker ps
 ```
 
 ---
 
-# Common Jenkins Plugins
+# Installing Jenkins
 
-| Plugin | Purpose |
-|---------|---------|
-| Git | Connect Jenkins with Git repositories |
-| Pipeline | Create CI/CD pipelines |
-| Docker | Build and manage Docker containers |
-| Blue Ocean | Modern Jenkins user interface |
-| Maven Integration | Build Java projects |
-| NodeJS | Build Node.js applications |
-| Email Extension | Send build notifications |
+The installation process is:
 
----
+```text
+Install Java
+    │
+    ▼
+Add Jenkins Repository
+    │
+    ▼
+Install Jenkins
+    │
+    ▼
+Start Jenkins Service
+    │
+    ▼
+Access Jenkins Dashboard
+```
 
-# Security Best Practices
+The Jenkins dashboard is normally available at:
 
-- Change the default administrator password.
-- Install plugins only from trusted sources.
-- Keep Jenkins updated.
-- Use the Jenkins Credentials Store for secrets.
-- Restrict administrative access.
-- Back up the Jenkins home directory regularly.
+```text
+http://<server-ip>:8080
+```
 
----
+For a local installation:
 
-# Advantages
-
-- Free and open source
-- Cross-platform
-- Large plugin ecosystem
-- Supports Pipeline as Code
-- Easy integration with cloud platforms
-- Highly extensible
+```text
+http://localhost:8080
+```
 
 ---
 
-# Limitations
+# Jenkins Initial Configuration
 
-- Plugin dependency conflicts
-- Requires periodic maintenance
-- Resource-intensive for large workloads
-- UI can become cluttered in large environments
+When Jenkins is accessed for the first time, it requires the initial administrator password.
 
----
+The password can be retrieved using:
 
-# Best Practices
+```bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
 
-- Use Pipeline as Code (`Jenkinsfile`).
-- Organize jobs into folders.
-- Remove unused plugins.
-- Back up Jenkins regularly.
-- Monitor disk usage.
-- Secure credentials using the built-in credential manager.
-- Keep Java and Jenkins up to date.
+After unlocking Jenkins, the initial setup wizard can be completed.
 
 ---
 
-# Key Takeaways
+# Docker Installation
 
-- Jenkins is a leading CI/CD automation server.
-- Java is a mandatory prerequisite.
-- Jenkins uses plugins to extend its functionality.
-- The default web interface runs on **port 8080**.
-- Jenkins can automate build, test, and deployment processes.
-- Proper maintenance and security are essential for production environments.
+Docker is installed on the Jenkins server so that Jenkins pipelines can build and run containers.
+
+The workflow is:
+
+```text
+Jenkins Pipeline
+      │
+      ▼
+Docker Build
+      │
+      ▼
+Docker Image
+      │
+      ▼
+Docker Container
+      │
+      ▼
+Application
+```
+
+Example Docker commands that Jenkins may execute:
+
+```bash
+docker build -t my-app .
+```
+
+```bash
+docker run -d -p 8080:8080 my-app
+```
 
 ---
 
-# References
+# Docker Compose
 
-- Jenkins Official Documentation
-- OpenJDK Documentation
-- Git Documentation
-- Docker Documentation
+Docker Compose is used to run multiple containers as one application.
+
+Example:
+
+```text
+Docker Compose
+      │
+      ├── Flask Application
+      │
+      └── MySQL Database
+```
+
+A Jenkins pipeline can start the complete application using:
+
+```bash
+docker compose up -d --build
+```
+
+The services can be stopped using:
+
+```bash
+docker compose down
+```
 
 ---
 
-# Next Topic
+# Important Concepts
 
-➡️ **Episode 04 – Jenkins Dashboard**
+## Jenkins Controller
 
-In the next chapter, we will explore the Jenkins Dashboard, understand its interface, configure global settings, manage plugins, and create our first Jenkins job.
+The Controller is responsible for:
+
+- Managing Jenkins
+- Scheduling jobs
+- Managing configuration
+- Triggering pipelines
+- Assigning work to Agents
+
+---
+
+## Jenkins Agent
+
+An Agent executes the actual pipeline tasks.
+
+For example:
+
+```text
+Jenkins Agent
+      │
+      ├── Checkout Code
+      │
+      ├── Build Application
+      │
+      ├── Run Tests
+      │
+      └── Build Docker Image
+```
+
+Docker must be installed on the Agent that executes Docker commands.
+
+Installing Docker on one machine does not automatically install it on every Jenkins Agent.
+
+---
+
+## Jenkins User
+
+Jenkins jobs run using the Linux user:
+
+```text
+jenkins
+```
+
+This user is different from the default Ubuntu user.
+
+Therefore, Docker permissions must be configured specifically for the Jenkins user.
+
+Example:
+
+```bash
+sudo -u jenkins docker ps
+```
+
+This command verifies whether Jenkins can access Docker.
+
+---
+
+# Troubleshooting Overview
+
+Common problems include:
+
+| Problem | Meaning |
+|---|---|
+| `docker: not found` | Docker is not installed or unavailable in PATH |
+| `permission denied` | Jenkins cannot access Docker |
+| `docker compose: command not found` | Docker Compose is not installed |
+| Docker works for Ubuntu but not Jenkins | Different users have different permissions |
+| Docker works on Controller but not Agent | Docker is missing on the executing Agent |
+
+Detailed troubleshooting information is available in:
+
+```text
+troubleshooting.md
+```
+
+---
+
+# Learning Outcome
+
+After completing this section, you should understand:
+
+- What Jenkins is
+- Why Java is required
+- How to install Jenkins
+- How to manage the Jenkins service
+- How to access the Jenkins dashboard
+- Why Docker is commonly used with Jenkins
+- How to give Jenkins permission to use Docker
+- Why Docker Compose is useful
+- The difference between a Jenkins Controller and Agent
+- How Jenkins, Docker, and CI/CD work together
+
+The next step is to explore the Jenkins Dashboard and understand the basic Jenkins interface.

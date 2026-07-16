@@ -1,177 +1,180 @@
-# Episode 06 - Jenkins Pipeline
+# 06 — Jenkins Pipeline
 
-## Overview
+This section introduces Jenkins Pipelines and explains how to automate software delivery using a Pipeline as Code approach.
 
-A Jenkins Pipeline is a suite of automated processes that defines how software is built, tested, and deployed. Unlike Freestyle Projects, Pipelines are written as code in a **Jenkinsfile**, allowing teams to version-control, review, and reuse their CI/CD workflows.
-
-This approach, known as **Pipeline as Code**, is the preferred method for implementing Continuous Integration and Continuous Delivery in modern DevOps environments.
+Instead of manually configuring every build step through the Jenkins Dashboard, a Pipeline allows the entire CI/CD workflow to be defined as code.
 
 ---
 
-# Learning Objectives
+# What Is a Jenkins Pipeline?
 
-After completing this chapter, you will be able to:
+A Jenkins Pipeline is an automated sequence of steps used to build, test, and deploy an application.
 
-- Understand Pipeline as Code
-- Create a Jenkins Pipeline
-- Write a basic Declarative Pipeline
-- Understand the structure of a Jenkinsfile
-- Execute a pipeline
-- View pipeline stages and logs
-- Compare Freestyle Projects with Pipelines
+A basic Pipeline looks like this:
 
----
+```text
+Source Code
+    │
+    ▼
+Checkout
+    │
+    ▼
+Build
+    │
+    ▼
+Test
+    │
+    ▼
+Package
+    │
+    ▼
+Deploy
+```
 
-# What is a Jenkins Pipeline?
-
-A Jenkins Pipeline is an automated workflow that defines the complete software delivery process.
-
-Instead of manually configuring jobs through the Jenkins UI, every stage is written inside a **Jenkinsfile** stored in the project's Git repository.
-
-Typical pipeline stages include:
-
-- Checkout
-- Build
-- Test
-- Package
-- Deploy
-- Notify
+Jenkins executes these steps automatically.
 
 ---
 
-# Why Pipelines?
+# Traditional Jenkins Job vs Pipeline
 
-Freestyle Projects become difficult to maintain as applications grow.
+## Freestyle Job
 
-Pipelines solve this problem by:
+In a Freestyle Job, configuration is mainly performed through the Jenkins web interface.
 
-- Storing configuration in Git
-- Supporting code reviews
-- Enabling reusable workflows
-- Automating deployments
-- Improving collaboration
-- Simplifying maintenance
+```text
+Jenkins Dashboard
+        │
+        ▼
+Configure Job Manually
+        │
+        ▼
+Build Steps
+        │
+        ▼
+Execute Build
+```
+
+This can become difficult to manage as the project grows.
+
+---
+
+## Jenkins Pipeline
+
+A Pipeline defines the workflow as code:
+
+```text
+Jenkinsfile
+     │
+     ▼
+Pipeline
+     │
+     ├── Build
+     ├── Test
+     ├── Package
+     └── Deploy
+```
+
+The Pipeline can be stored in a Git repository and version controlled.
 
 ---
 
 # Pipeline as Code
 
-Pipeline as Code means storing the CI/CD workflow alongside the application source code.
+The Pipeline as Code approach means that the CI/CD workflow is stored as a file.
+
+The most common file is:
+
+```text
+Jenkinsfile
+```
 
 Example:
 
 ```text
-Project/
-│
-├── src/
-├── tests/
-├── Dockerfile
-└── Jenkinsfile
+Project Repository
+        │
+        ├── application/
+        │
+        ├── Dockerfile
+        │
+        └── Jenkinsfile
 ```
 
-Whenever the project changes, the pipeline evolves with it.
+This allows the pipeline configuration to be:
+
+- Version controlled
+- Reviewed
+- Shared
+- Modified through Git
+- Reused by different environments
 
 ---
 
-# Jenkinsfile
+# Basic Jenkins Pipeline
 
-A **Jenkinsfile** defines every step of the CI/CD process using the Groovy-based Declarative Pipeline syntax.
-
-Example:
+A simple Declarative Pipeline looks like this:
 
 ```groovy
 pipeline {
+
     agent any
 
     stages {
 
         stage('Build') {
             steps {
-                echo 'Building Application'
+                echo 'Building application...'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running Tests'
+                echo 'Running tests...'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying Application'
+                echo 'Deploying application...'
             }
         }
 
     }
+
 }
-```
-
-Store the `Jenkinsfile` in the root directory of your repository.
-
----
-
-# Pipeline Workflow
-
-```text
-Developer
-     │
-     ▼
-Write Code
-     │
-     ▼
-Git Commit
-     │
-     ▼
-Push to GitHub
-     │
-     ▼
-Jenkins Pipeline Triggered
-     │
-     ▼
-Checkout Source Code
-     │
-     ▼
-Build
-     │
-     ▼
-Test
-     │
-     ▼
-Package
-     │
-     ▼
-Deploy
-     │
-     ▼
-Notification
 ```
 
 ---
 
 # Pipeline Structure
 
-A Declarative Pipeline consists of the following sections:
+A Jenkins Declarative Pipeline usually contains:
+
+```text
+pipeline
+    │
+    ├── agent
+    │
+    ├── stages
+    │       │
+    │       ├── stage
+    │       │
+    │       ├── stage
+    │       │
+    │       └── stage
+    │
+    └── post
+```
+
+---
+
+# Pipeline
+
+The `pipeline` block contains the complete Jenkins Pipeline.
 
 ```groovy
 pipeline {
-
-    agent any
-
-    stages {
-
-        stage('Build') {
-            steps {
-
-            }
-        }
-
-    }
-
-    post {
-
-    }
-
+    // Pipeline configuration
 }
 ```
 
@@ -179,300 +182,464 @@ pipeline {
 
 # Agent
 
-The **agent** specifies where the pipeline executes.
-
-Example:
+The `agent` defines where the Pipeline will execute.
 
 ```groovy
 agent any
 ```
 
-Other options include:
+This means Jenkins can use any available agent.
 
-- Specific node
-- Docker container
-- Kubernetes Pod
+Example:
+
+```groovy
+pipeline {
+
+    agent any
+
+    stages {
+        // Stages
+    }
+
+}
+```
+
+The agent is the machine or environment that executes the actual Pipeline commands.
 
 ---
 
 # Stages
 
-Stages divide the pipeline into logical phases.
+The `stages` block contains the different phases of the Pipeline.
 
-Typical stages:
+```groovy
+stages {
 
-- Checkout
-- Build
-- Test
-- Package
-- Deploy
+    stage('Build') {
+        steps {
+            echo 'Building...'
+        }
+    }
+
+    stage('Test') {
+        steps {
+            echo 'Testing...'
+        }
+    }
+
+}
+```
+
+A Pipeline usually separates different responsibilities into different stages.
+
+---
+
+# Stage
+
+A `stage` represents a specific phase of the CI/CD workflow.
+
+Examples:
+
+```text
+Build
+  ↓
+Test
+  ↓
+Package
+  ↓
+Deploy
+```
 
 Example:
 
 ```groovy
-stage('Build')
+stage('Build') {
+    steps {
+        echo 'Building application'
+    }
+}
 ```
-
-Each stage should perform a single responsibility.
 
 ---
 
 # Steps
 
-Steps define the commands executed within a stage.
+The `steps` block contains the commands Jenkins executes.
 
-Linux example:
+Example:
 
 ```groovy
-sh 'pwd'
+steps {
+    echo 'Hello Jenkins'
+}
 ```
 
-Windows example:
+Shell command:
 
 ```groovy
-bat 'dir'
-```
-
-Display a message:
-
-```groovy
-echo 'Hello Jenkins'
+steps {
+    sh 'ls -la'
+}
 ```
 
 ---
 
-# Post Section
+# Pipeline Execution Flow
 
-The `post` block runs after pipeline execution.
+A Jenkins Pipeline normally executes stages sequentially:
+
+```text
+Stage 1: Checkout
+        │
+        ▼
+Stage 2: Build
+        │
+        ▼
+Stage 3: Test
+        │
+        ▼
+Stage 4: Package
+        │
+        ▼
+Stage 5: Deploy
+```
+
+If a stage fails, the following stages normally do not execute.
+
+Example:
+
+```text
+Build
+  │
+  ▼
+Test ❌
+  │
+  ✕
+Deploy does not run
+```
+
+This prevents broken code from continuing through the deployment process.
+
+---
+
+# Jenkins Pipeline with Docker
+
+Jenkins Pipelines can use Docker to build and run applications.
+
+The workflow looks like this:
+
+```text
+Jenkins Pipeline
+        │
+        ▼
+Build Application
+        │
+        ▼
+Run Tests
+        │
+        ▼
+Build Docker Image
+        │
+        ▼
+Run Container
+        │
+        ▼
+Deploy Application
+```
+
+Example:
+
+```groovy
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t my-app .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh 'docker run -d -p 8080:8080 my-app'
+            }
+        }
+
+    }
+
+}
+```
+
+Docker must be installed on the machine or Jenkins Agent executing the Pipeline.
+
+---
+
+# Multi-Stage Pipeline
+
+A Pipeline can contain multiple stages:
+
+```groovy
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                echo 'Checking out source code'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building application'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application'
+            }
+        }
+
+    }
+
+}
+```
+
+This creates a clear and organized CI/CD workflow.
+
+---
+
+# Pipeline Environment Variables
+
+Environment variables can be defined inside a Pipeline.
+
+```groovy
+pipeline {
+
+    agent any
+
+    environment {
+        APP_NAME = 'my-app'
+        ENVIRONMENT = 'production'
+    }
+
+    stages {
+
+        stage('Display Variables') {
+            steps {
+                echo "Application: ${APP_NAME}"
+                echo "Environment: ${ENVIRONMENT}"
+            }
+        }
+
+    }
+
+}
+```
+
+Environment variables are useful for storing configuration values.
+
+---
+
+# Pipeline Options
+
+Pipeline options can control how a Pipeline behaves.
+
+Example timeout:
+
+```groovy
+options {
+    timeout(time: 20, unit: 'MINUTES')
+}
+```
+
+Example:
+
+```groovy
+pipeline {
+
+    agent any
+
+    options {
+        timeout(time: 20, unit: 'MINUTES')
+    }
+
+    stages {
+        // Stages
+    }
+
+}
+```
+
+---
+
+# Post Actions
+
+The `post` block runs after the Pipeline or a stage finishes.
 
 Example:
 
 ```groovy
 post {
 
+    always {
+        echo 'Pipeline finished'
+    }
+
     success {
-        echo 'Pipeline completed successfully.'
+        echo 'Pipeline succeeded'
     }
 
     failure {
-        echo 'Pipeline failed.'
-    }
-
-    always {
-        echo 'Pipeline finished.'
+        echo 'Pipeline failed'
     }
 
 }
 ```
 
----
-
-# Creating Your First Pipeline
-
-## Step 1
-
-Open Jenkins Dashboard.
-
-```
-http://localhost:8080
-```
-
----
-
-## Step 2
-
-Click:
-
-```
-New Item
-```
-
----
-
-## Step 3
-
-Enter a project name.
-
-Example:
-
-```
-Hello-Pipeline
-```
-
-Select:
-
-```
-Pipeline
-```
-
-Click **OK**.
-
----
-
-## Step 4
-
-Under **Pipeline**, choose:
-
-```
-Pipeline Script
-```
-
-Paste the following:
-
-```groovy
-pipeline {
-    agent any
-
-    stages {
-
-        stage('Hello') {
-            steps {
-                echo 'Hello, Jenkins Pipeline!'
-            }
-        }
-
-    }
-}
-```
-
-Save the job.
-
----
-
-## Step 5
-
-Click:
-
-```
-Build Now
-```
-
----
-
-## Step 6
-
-Open:
-
-```
-Build History
-```
-
-↓
-
-```
-Console Output
-```
-
-Example output:
-
-```text
-Started by user admin
-
-[Pipeline] Start of Pipeline
-
-Hello, Jenkins Pipeline!
-
-Finished: SUCCESS
-```
-
----
-
-# Pipeline Visualization
+Example flow:
 
 ```text
 Pipeline
-
-✔ Checkout
-
-✔ Build
-
-✔ Test
-
-✔ Deploy
+    │
+    ▼
+Success
+    │
+    ▼
+post → success
 ```
 
-Each completed stage is marked as successful.
+or:
+
+```text
+Pipeline
+    │
+    ▼
+Failure
+    │
+    ▼
+post → failure
+```
 
 ---
 
-# Declarative vs Scripted Pipeline
+# Pipeline as Code Workflow
 
-| Feature | Declarative | Scripted |
-|----------|-------------|-----------|
-| Syntax | Simple | Advanced |
-| Learning Curve | Easy | Moderate |
-| Flexibility | Good | Excellent |
-| Recommended | Yes | Advanced Use Cases |
+A typical workflow looks like this:
 
----
+```text
+Developer
+    │
+    ▼
+Modify Jenkinsfile
+    │
+    ▼
+Git Commit
+    │
+    ▼
+Git Push
+    │
+    ▼
+Jenkins
+    │
+    ▼
+Read Jenkinsfile
+    │
+    ▼
+Execute Pipeline
+```
 
-# Pipeline vs Freestyle Project
-
-| Feature | Freestyle | Pipeline |
-|----------|------------|-----------|
-| Configuration | GUI | Code |
-| Git Integration | Limited | Excellent |
-| Version Control | No | Yes |
-| Reusability | Low | High |
-| Scalability | Limited | Excellent |
-| Production Ready | Limited | Yes |
-
----
-
-# Best Practices
-
-- Store the Jenkinsfile in Git.
-- Keep stages small and focused.
-- Use meaningful stage names.
-- Avoid hardcoding secrets.
-- Use Jenkins Credentials.
-- Review Console Output after every build.
-- Keep pipelines modular.
-- Test pipelines in a development environment first.
+The Pipeline configuration is stored together with the application source code.
 
 ---
 
-# Advantages
+# Jenkins Pipeline with GitHub
 
-- Pipeline as Code
-- Version controlled
-- Reusable
-- Easy collaboration
-- Better debugging
-- Supports parallel execution
-- Production-ready automation
+A common CI/CD workflow is:
 
----
+```text
+Developer
+    │
+    ▼
+Push Code to GitHub
+    │
+    ▼
+Jenkins Triggered
+    │
+    ▼
+Checkout Repository
+    │
+    ▼
+Build
+    │
+    ▼
+Test
+    │
+    ▼
+Docker Build
+    │
+    ▼
+Deploy
+```
 
-# Limitations
-
-- Requires basic Groovy knowledge
-- More complex than Freestyle Projects
-- Advanced pipelines can become difficult to maintain without proper structure
-
----
-
-# Key Takeaways
-
-- A Jenkins Pipeline automates the software delivery process using a **Jenkinsfile**.
-- Pipelines are stored in Git, enabling version control and collaboration.
-- Declarative Pipelines are recommended for most projects because they are easier to read and maintain.
-- Organizing work into stages improves visibility and simplifies troubleshooting.
-- Pipeline as Code is the standard approach for modern CI/CD workflows.
-
----
-
-# References
-
-- Jenkins Official Documentation
-- Jenkins Pipeline Syntax Reference
-- Jenkins User Handbook
-- Groovy Language Documentation
+This creates an automated CI/CD workflow.
 
 ---
 
-# Next Topic
+# Why Use Pipelines?
 
-➡️ **Episode 07 – Jenkinsfile**
+Jenkins Pipelines provide several advantages:
 
-In the next chapter, we will explore the **Jenkinsfile** in detail, understand its syntax, directives, stages, environment variables, parameters, and learn how to build production-ready CI/CD pipelines.
+- Pipeline configuration is stored as code.
+- Changes can be tracked with Git.
+- Pipelines can be reviewed.
+- Pipelines can be reused.
+- Complex workflows can be automated.
+- Manual configuration is reduced.
+- CI/CD workflows become easier to reproduce.
+
+---
+
+# Pipeline vs Freestyle Jobs
+
+| Feature | Freestyle Job | Pipeline |
+|---|---|---|
+| Configuration | Jenkins UI | Code |
+| Version Control | Limited | Yes |
+| Complex Workflows | Difficult | Easy |
+| Reusability | Limited | High |
+| Code Review | Difficult | Easy |
+| Multi-Stage Workflows | Limited | Supported |
+| Pipeline as Code | No | Yes |
+
+---
+
+# Learning Outcome
+
+After completing this section, you should understand:
+
+- What a Jenkins Pipeline is.
+- The difference between Freestyle Jobs and Pipelines.
+- What Pipeline as Code means.
+- The purpose of a Jenkinsfile.
+- The purpose of agents.
+- The purpose of stages and steps.
+- How Pipelines execute sequentially.
+- How Jenkins can use Docker.
+- How environment variables work.
+- How post actions work.
+- How Jenkins can automate a CI/CD workflow.
+
+The next step is to learn how to create and manage a `Jenkinsfile`.

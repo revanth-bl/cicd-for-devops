@@ -1,6 +1,6 @@
 # Commands
 
-This section contains the commands required to install and verify Jenkins on different operating systems.
+This section contains the commands required to install and verify Jenkins, configure Docker for Jenkins, and manage Jenkins services on different operating systems.
 
 ---
 
@@ -18,7 +18,7 @@ or
 java -version
 ```
 
-Example Output
+Example Output:
 
 ```text
 openjdk 21.0.2
@@ -137,7 +137,157 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 ---
 
+# Install Docker
+
+Docker is commonly used with Jenkins to build images, run containers, and deploy applications.
+
+Update package index:
+
+```bash
+sudo apt update
+```
+
+Install Docker:
+
+```bash
+sudo apt install docker.io -y
+```
+
+Start Docker:
+
+```bash
+sudo systemctl start docker
+```
+
+Enable Docker at boot:
+
+```bash
+sudo systemctl enable docker
+```
+
+Verify Docker installation:
+
+```bash
+docker --version
+```
+
+Check Docker status:
+
+```bash
+sudo systemctl status docker
+```
+
+---
+
+# Give Jenkins Permission to Use Docker
+
+Jenkins pipelines run using the `jenkins` Linux user.
+
+Add Jenkins to the Docker group:
+
+```bash
+sudo usermod -aG docker jenkins
+```
+
+Restart Jenkins so the new group permissions take effect:
+
+```bash
+sudo systemctl restart jenkins
+```
+
+Verify Jenkins groups:
+
+```bash
+groups jenkins
+```
+
+Test Docker access as the Jenkins user:
+
+```bash
+sudo -u jenkins docker ps
+```
+
+Check whether Jenkins can find Docker:
+
+```bash
+sudo -u jenkins which docker
+```
+
+Check Docker version as Jenkins:
+
+```bash
+sudo -u jenkins docker --version
+```
+
+---
+
+# Install Docker Compose
+
+Docker Compose is useful for running multi-container applications, such as an application and a database.
+
+For Ubuntu 24.04:
+
+```bash
+sudo apt update
+```
+
+Install Docker Compose V2:
+
+```bash
+sudo apt install docker-compose-v2 -y
+```
+
+Verify Docker Compose:
+
+```bash
+docker compose version
+```
+
+Test Docker Compose as Jenkins:
+
+```bash
+sudo -u jenkins docker compose version
+```
+
+---
+
+# Docker Verification
+
+Check Docker version:
+
+```bash
+docker --version
+```
+
+Find Docker installation path:
+
+```bash
+which docker
+```
+
+List Docker images:
+
+```bash
+docker images
+```
+
+List running containers:
+
+```bash
+docker ps
+```
+
+Test Docker as Jenkins:
+
+```bash
+sudo -u jenkins docker ps
+```
+
+---
+
 # Open Jenkins Dashboard
+
+Local machine:
 
 ```text
 http://localhost:8080
@@ -207,7 +357,7 @@ Restart-Service Jenkins
 
 ---
 
-# Docker (Optional)
+# Jenkins with Docker
 
 Pull Jenkins image:
 
@@ -225,13 +375,13 @@ docker run -d \
 jenkins/jenkins:lts
 ```
 
-View logs:
+View Jenkins container logs:
 
 ```bash
 docker logs jenkins
 ```
 
-Get admin password:
+Get Jenkins initial administrator password:
 
 ```bash
 docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
@@ -239,15 +389,131 @@ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
 ---
 
-# Verify Installation
+# Docker Commands Used with Jenkins
 
-Open:
+Build a Docker image:
 
-```text
-http://localhost:8080
+```bash
+docker build -t my-app .
 ```
 
-If the Jenkins dashboard loads successfully, the installation is complete.
+Run a Docker container:
+
+```bash
+docker run -d -p 8080:8080 my-app
+```
+
+List running containers:
+
+```bash
+docker ps
+```
+
+List all containers:
+
+```bash
+docker ps -a
+```
+
+Stop a container:
+
+```bash
+docker stop <container-id>
+```
+
+Remove a container:
+
+```bash
+docker rm <container-id>
+```
+
+List Docker images:
+
+```bash
+docker images
+```
+
+Remove a Docker image:
+
+```bash
+docker rmi <image-name>
+```
+
+---
+
+# Docker Compose Commands
+
+Start services:
+
+```bash
+docker compose up -d
+```
+
+Build and start services:
+
+```bash
+docker compose up -d --build
+```
+
+Stop services:
+
+```bash
+docker compose down
+```
+
+Check running services:
+
+```bash
+docker compose ps
+```
+
+View service logs:
+
+```bash
+docker compose logs
+```
+
+Follow live service logs:
+
+```bash
+docker compose logs -f
+```
+
+Validate a Compose file:
+
+```bash
+docker compose config
+```
+
+---
+
+# Verify Installation
+
+Check Jenkins:
+
+```bash
+sudo systemctl status jenkins
+```
+
+Check Docker:
+
+```bash
+sudo systemctl status docker
+```
+
+Check Docker access as Jenkins:
+
+```bash
+sudo -u jenkins docker ps
+```
+
+Check Docker Compose:
+
+```bash
+docker compose version
+```
+
+If all required services are working, the Jenkins and Docker environment is ready for pipeline development.
 
 ---
 
@@ -262,6 +528,16 @@ If the Jenkins dashboard loads successfully, the installation is complete.
 | `systemctl status jenkins` | Check Jenkins status |
 | `systemctl restart jenkins` | Restart Jenkins |
 | `journalctl -u jenkins` | View Jenkins logs |
-| `cat initialAdminPassword` | Get unlock password |
+| `cat initialAdminPassword` | Get Jenkins unlock password |
 | `ufw allow 8080` | Open Jenkins port |
+| `sudo apt install docker.io` | Install Docker |
+| `systemctl status docker` | Check Docker status |
+| `usermod -aG docker jenkins` | Give Jenkins Docker access |
+| `sudo -u jenkins docker ps` | Test Docker access as Jenkins |
+| `docker-compose-v2` | Install Docker Compose V2 |
+| `docker compose version` | Verify Docker Compose |
+| `docker build` | Build a Docker image |
+| `docker run` | Run a Docker container |
+| `docker compose up -d` | Start Compose services |
+| `docker compose down` | Stop Compose services |
 | `docker pull jenkins/jenkins:lts` | Download Jenkins Docker image |
