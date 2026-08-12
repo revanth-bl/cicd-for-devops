@@ -1383,4 +1383,4 @@ permission denied while trying to connect to Docker
 
 means Jenkins found Docker but does not have permission to use it.
 
-Understanding the exact error message is one of the most important skills when working with Jenkins and CI/CD. 1 2
+Understanding the exact error message is one of the most important skills when working with Jenkins and CI/CD. 1 2 3
