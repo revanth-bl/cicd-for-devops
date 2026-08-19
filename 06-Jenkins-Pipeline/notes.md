@@ -369,4 +369,4 @@ A Stage groups related steps together, making the pipeline easier to understand 
 - The Jenkinsfile is stored alongside application source code in Git.
 - Declarative Pipelines are recommended for most projects due to their simplicity and maintainability.
 - Pipelines are more scalable, reusable, and production-ready than Freestyle Projects.
-- Organizing pipelines into clear stages improves readability, debugging, and long-term maintenance.
+- Organizing pipelines into clear stages improves readability, debugging, and long-term maintenance. 1
